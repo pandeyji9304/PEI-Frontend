@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export const Cart = () => {
-  const { state, dispatch } = useCart();
+  const { state, addToCart, updateCartItem, removeFromCart, fetchCart } = useCart();
+
+  useEffect(() => {
+    // Fetch cart data when the component mounts
+    fetchCart();
+  }, [fetchCart]);
 
   const updateQuantity = (id, quantity) => {
     if (quantity < 1) return;
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
+    updateCartItem(id, quantity);  // Use the updateCartItem from context
   };
 
   if (state.items.length === 0) {
@@ -31,9 +36,9 @@ export const Cart = () => {
       
       <div className="bg-white rounded-lg shadow-md p-6">
         {state.items.map(item => (
-          <div key={item.id} className="flex items-center py-6 border-b">
+          <div key={item.productId} className="flex items-center py-6 border-b">
             <img
-              src={item.image}
+              src={item.image} // Assuming the image path is correct in the item object
               alt={item.name}
               className="h-24 w-24 object-cover rounded"
             />
@@ -46,14 +51,14 @@ export const Cart = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                   className="p-1 rounded-full hover:bg-gray-100"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
                 <span className="w-8 text-center">{item.quantity}</span>
                 <button
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                   className="p-1 rounded-full hover:bg-gray-100"
                 >
                   <Plus className="h-4 w-4" />
@@ -61,7 +66,7 @@ export const Cart = () => {
               </div>
               
               <button
-                onClick={() => dispatch({ type: 'REMOVE_FROM_CART', payload: item.id })}
+                onClick={() => removeFromCart(item.productId)} // Using removeFromCart from context
                 className="text-red-500 hover:text-red-700"
               >
                 <Trash2 className="h-5 w-5" />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import { Zap, PenTool as Tool, Shield, Truck } from 'lucide-react';
 import { products } from '../data/products';
@@ -6,9 +6,37 @@ import { ProductCard } from '../components/ProductCard';
 import { Swiper, SwiperSlide } from 'swiper/react'; // Import Swiper and SwiperSlide
 import 'swiper/css'; // Import Swiper styles
 import { Autoplay } from 'swiper'; // Import Autoplay module from Swiper
+import axios from "axios";
 
 export const Home = () => {
-  const featuredProducts = products.slice(0, 3);
+
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("http://localhost:5001/api/products");
+        setFeaturedProducts(response.data.slice(0, 3)); // Only take the first 3 products
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch products");
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+ 
   const heroImages = [
     '/path/to/image1.jpg',
     '/path/to/image2.jpg',
@@ -91,9 +119,11 @@ export const Home = () => {
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 relative">
         <h2 className="text-3xl font-bold text-center mb-12">Featured Products</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredProducts.slice(0, 3).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        {featuredProducts.slice(0, 3).map((product, index) => (
+          <ProductCard key={`${product.name}-${index}`} product={product} />
+      ))}
+
+
         </div>
 
         {/* Floating Arrow */}
@@ -111,7 +141,7 @@ export const Home = () => {
               stroke="currentColor"
               className="w-8 h-8"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m0 0l-7-7m7 7l-7 7" />
+              <path strokeLinejoin="round" strokeWidth="2" />
             </svg>
           </button>
           <p className="absolute right-0 top-10 text-sm text-gray-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100">

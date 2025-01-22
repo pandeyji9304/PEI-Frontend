@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import axios from 'axios';
+
 
 export const Checkout = () => {
   const navigate = useNavigate();
@@ -14,19 +16,39 @@ export const Checkout = () => {
     phone: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit =     async (e) => {
     e.preventDefault();
-    // In a real app, we would process payment and create order here
-    dispatch({ type: 'CLEAR_CART' });
-    navigate('/order-confirmation', {
-      state: {
-        orderId: Math.random().toString(36).substr(2, 9),
-        items: state.items,
-        total: state.total,
-        shippingAddress
-      }
-    });
+  
+    try {
+      const response = await axios.post(
+        'http://localhost:5001/api/orders',
+        {
+          shippingAddress,
+          paymentMethod: 'Cash On Delivery', // Or another payment method
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`, // Send token for authentication
+          },
+        }
+      );
+  
+      // Clear cart and navigate to confirmation page
+      dispatch({ type: 'CLEAR_CART' });
+      navigate('/order-confirmation', {
+        state: {
+          orderId: response.data._id,
+          items: state.items,
+          total: state.total,
+          shippingAddress,
+        },
+      });
+    } catch (error) {
+      console.error('Error placing order:', error.response?.data?.message || error.message);
+      alert('Failed to place the order. Please try again.');
+    }
   };
+  
 
   if (state.items.length === 0) {
     navigate('/cart');
